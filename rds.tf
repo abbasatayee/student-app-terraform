@@ -12,6 +12,8 @@ resource "aws_db_instance" "mysql" {
   db_subnet_group_name = aws_db_subnet_group.main.name
   multi_az             = true
   publicly_accessible  = false
+  deletion_protection  = false
+  skip_final_snapshot  = true
   tags = {
     Name = "Student Database"
   }
