@@ -11,3 +11,7 @@ crash.log
 
 # Any local environment variables
 .env
+
+# Private key files
+*.pem
+*.key
