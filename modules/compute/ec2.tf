@@ -37,31 +37,26 @@ resource "aws_instance" "web" {
   # User data script to bootstrap the instance
   # This script installs dependencies, sets up the database, and configures the application
   user_data = <<-EOF
-    #!/bin/bash -xe
     
-    # Update system packages
+    #!/bin/bash -xe
     apt update -y
-    apt install -y nodejs unzip wget npm mysql-client
-        
-    # Download and setup application
-    wget https://public-bucketabbas.s3.us-east-1.amazonaws.com/code.zip -P /home/ubuntu
+    apt install nodejs unzip wget npm mysql-client -y
+
+    #wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-200-ACCAP1-1-DEV/code.zip -P /home/ubuntu
+    wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-200-ACCAP1-1-91571/1-lab-capstone-project-1/code.zip -P /home/ubuntu
     cd /home/ubuntu
-    unzip -q code.zip -x "resources/codebase_partner/node_modules/*"
+    unzip code.zip -x "resources/codebase_partner/node_modules/*"
     cd resources/codebase_partner
     npm install aws aws-sdk
     
-    # Start application
     export APP_PORT=80
-    nohup npm start > /var/log/app.log 2>&1 &
-    
-    # Create startup script for automatic restart on boot
-    cat > /etc/rc.local <<'SCRIPT'
-    #!/bin/bash -xe
+    npm start &
+    echo '#!/bin/bash -xe
     cd /home/ubuntu/resources/codebase_partner
     export APP_PORT=80
-    nohup npm start > /var/log/app.log 2>&1 &
-    SCRIPT
+    npm start' > /etc/rc.local
     chmod +x /etc/rc.local
+
   EOF
 
   tags = merge(
