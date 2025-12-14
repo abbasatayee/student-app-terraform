@@ -2,13 +2,16 @@
 # AWS Secrets Manager for storing database credentials securely
 
 # Secret to store database credentials
+# Note: Secret name is fixed as "Mydbsecret" as per project requirements
 resource "aws_secretsmanager_secret" "db_secret" {
-  name        = "${var.name_prefix}-db-secret"
+  name        = "Mydbsecret"
   description = "Database credentials for student records application"
+
+  recovery_window_in_days = var.recovery_window_in_days
 
   tags = merge(
     {
-      Name = "${var.name_prefix}-db-secret"
+      Name = "Mydbsecret"
     },
     var.common_tags
   )

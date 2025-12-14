@@ -32,3 +32,9 @@ variable "common_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "recovery_window_in_days" {
+  description = "Number of days that AWS Secrets Manager waits before it can delete the secret (0 = immediate deletion, 7-30 = recovery window)"
+  type        = number
+  default     = 0
+}

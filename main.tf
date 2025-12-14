@@ -82,6 +82,7 @@ module "compute" {
 
 # Secrets Module
 # Creates AWS Secrets Manager secret for database credentials
+# Secret name is fixed as "Mydbsecret" as per project requirements
 module "secrets" {
   source = "./modules/secrets"
 
