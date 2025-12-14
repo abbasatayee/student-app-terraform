@@ -1,0 +1,94 @@
+graph TB
+    subgraph Internet["🌐 Internet"]
+        Users["👥 Users"]
+    end
+
+    subgraph VPC["VPC: 10.0.0.0/16<br/>Student Web Application"]
+        IGW["Internet Gateway"]
+        
+        subgraph AZ1["Availability Zone 1<br/>(us-east-1a)"]
+            subgraph PubSub1["Public Subnet 1<br/>10.0.1.0/24"]
+                ALB["Application Load Balancer<br/>Port: 80 (HTTP)"]
+                TG["Target Group<br/>Health Checks"]
+            end
+            
+            subgraph PrivSub1["Private Subnet 1<br/>10.0.101.0/24"]
+                EC2_1["EC2 Instance 1<br/>t3.micro<br/>Ubuntu 22.04<br/>Node.js App"]
+                RDS_Primary["RDS MySQL Primary<br/>db.t3.micro<br/>Port: 3306"]
+            end
+        end
+        
+        subgraph AZ2["Availability Zone 2<br/>(us-east-1b)"]
+            subgraph PubSub2["Public Subnet 2<br/>10.0.2.0/24"]
+                ALB2["ALB (Multi-AZ)"]
+            end
+            
+            subgraph PrivSub2["Private Subnet 2<br/>10.0.102.0/24"]
+                EC2_2["EC2 Instance 2<br/>t3.micro<br/>Ubuntu 22.04<br/>Node.js App"]
+                RDS_Standby["RDS MySQL Standby<br/>db.t3.micro<br/>Multi-AZ Replica"]
+            end
+        end
+        
+        subgraph ASG["Auto Scaling Group"]
+            ASG_Config["Min: 1<br/>Max: 6<br/>Desired: 2<br/>CPU-based Scaling"]
+        end
+    end
+
+    subgraph Security["🔒 Security"]
+        SG_LB["Load Balancer SG<br/>Inbound: HTTP/HTTPS<br/>from Internet"]
+        SG_Web["Web Server SG<br/>Inbound: HTTP (80)<br/>from LB SG"]
+        SG_DB["Database SG<br/>Inbound: MySQL (3306)<br/>from Web SG"]
+    end
+
+    subgraph IAM_Services["🔐 IAM & Services"]
+        IAM_Role["EC2 IAM Role<br/>- SSM Access<br/>- Secrets Manager"]
+        Secrets["AWS Secrets Manager<br/>Secret: Mydbsecret<br/>DB Credentials"]
+    end
+
+    subgraph Route["📋 Routing"]
+        RT_Public["Public Route Table<br/>0.0.0.0/0 → IGW"]
+    end
+
+    %% User Traffic Flow
+    Users -->|HTTP/HTTPS| IGW
+    IGW -->|Route| RT_Public
+    RT_Public -->|Route| PubSub1
+    RT_Public -->|Route| PubSub2
+    IGW --> ALB
+    ALB --> TG
+    TG -->|Health Checks| EC2_1
+    TG -->|Health Checks| EC2_2
+    EC2_1 -.->|Scaling| ASG
+    EC2_2 -.->|Scaling| ASG
+
+    %% Database Connections
+    EC2_1 -->|MySQL 3306| RDS_Primary
+    EC2_2 -->|MySQL 3306| RDS_Primary
+    RDS_Primary <-->|Replication| RDS_Standby
+
+    %% Security Group Associations
+    SG_LB -.->|Protects| ALB
+    SG_Web -.->|Protects| EC2_1
+    SG_Web -.->|Protects| EC2_2
+    SG_DB -.->|Protects| RDS_Primary
+    SG_DB -.->|Protects| RDS_Standby
+
+    %% IAM and Services
+    IAM_Role -.->|Attached| EC2_1
+    IAM_Role -.->|Attached| EC2_2
+    Secrets -.->|Accessed via| IAM_Role
+
+    %% Styling
+    classDef publicSubnet fill:#C8E6C9,stroke:#4CAF50,stroke-width:2px
+    classDef privateSubnet fill:#FFE0B2,stroke:#FF9800,stroke-width:2px
+    classDef compute fill:#BBDEFB,stroke:#2196F3,stroke-width:2px
+    classDef database fill:#F8BBD0,stroke:#E91E63,stroke-width:2px
+    classDef security fill:#FFF9C4,stroke:#FBC02D,stroke-width:2px
+    classDef network fill:#E1BEE7,stroke:#9C27B0,stroke-width:2px
+
+    class PubSub1,PubSub2 publicSubnet
+    class PrivSub1,PrivSub2 privateSubnet
+    class EC2_1,EC2_2,ALB,TG compute
+    class RDS_Primary,RDS_Standby database
+    class SG_LB,SG_Web,SG_DB,IAM_Role,Secrets security
+    class IGW,RT_Public network

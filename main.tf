@@ -27,16 +27,16 @@ module "iam" {
 module "database" {
   source = "./modules/database"
 
-  name_prefix          = local.name_prefix
-  db_name              = var.db_name
-  db_username          = var.db_username
-  db_password          = var.db_password
-  rds_instance_class   = var.rds_instance_class
+  name_prefix           = local.name_prefix
+  db_name               = var.db_name
+  db_username           = var.db_username
+  db_password           = var.db_password
+  rds_instance_class    = var.rds_instance_class
   rds_allocated_storage = var.rds_allocated_storage
-  rds_multi_az         = var.rds_multi_az
-  private_subnet_ids   = module.network.private_subnet_ids
-  db_security_group_id = module.network.db_sg_id
-  common_tags          = local.common_tags
+  rds_multi_az          = var.rds_multi_az
+  private_subnet_ids    = module.network.private_subnet_ids
+  db_security_group_id  = module.network.db_sg_id
+  common_tags           = local.common_tags
 }
 
 # Load Balancer Module
@@ -44,11 +44,11 @@ module "database" {
 module "load_balancer" {
   source = "./modules/load-balancer"
 
-  name_prefix        = local.name_prefix
-  vpc_id             = module.network.vpc_id
-  public_subnet_ids  = module.network.public_subnet_ids
+  name_prefix          = local.name_prefix
+  vpc_id               = module.network.vpc_id
+  public_subnet_ids    = module.network.public_subnet_ids
   lb_security_group_id = module.network.lb_sg_id
-  common_tags        = local.common_tags
+  common_tags          = local.common_tags
 }
 
 # Compute Module
