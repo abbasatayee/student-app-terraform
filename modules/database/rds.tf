@@ -4,20 +4,23 @@
 # DB Subnet Group
 # Defines which subnets the RDS instance can be deployed in (private subnets only)
 resource "aws_db_subnet_group" "main" {
-  name       = "${local.name_prefix}-db-subnet-group"
-  subnet_ids = [for s in aws_subnet.private : s.id]
+  name       = "${var.name_prefix}-db-subnet-group"
+  subnet_ids = var.private_subnet_ids
 
   description = "Private subnets for RDS MySQL database"
 
-  tags = {
-    Name = "${local.name_prefix}-db-subnet-group"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-db-subnet-group"
+    },
+    var.common_tags
+  )
 }
 
 # RDS MySQL Database Instance
 # Multi-AZ deployment for high availability and automatic failover
 resource "aws_db_instance" "mysql" {
-  identifier     = "${local.name_prefix}-database"
+  identifier     = "${var.name_prefix}-database"
   engine         = "mysql"
   engine_version = "8.0"
   instance_class = var.rds_instance_class
@@ -31,7 +34,7 @@ resource "aws_db_instance" "mysql" {
 
   # Network configuration
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  vpc_security_group_ids = [var.db_security_group_id]
   publicly_accessible    = false
 
   # High availability
@@ -49,7 +52,10 @@ resource "aws_db_instance" "mysql" {
   # Storage encryption
   storage_encrypted = true
 
-  tags = {
-    Name = "${local.name_prefix}-database"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-database"
+    },
+    var.common_tags
+  )
 }

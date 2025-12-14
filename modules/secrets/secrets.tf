@@ -3,12 +3,15 @@
 
 # Secret to store database credentials
 resource "aws_secretsmanager_secret" "db_secret" {
-  name        = "${local.name_prefix}-db-secret"
+  name        = "${var.name_prefix}-db-secret"
   description = "Database credentials for student records application"
 
-  tags = {
-    Name = "${local.name_prefix}-db-secret"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-db-secret"
+    },
+    var.common_tags
+  )
 }
 
 # Secret version containing the actual database credentials
@@ -19,7 +22,7 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_string = jsonencode({
     username = var.db_username
     password = var.db_password
-    host     = aws_db_instance.mysql.address
+    host     = var.rds_endpoint
     port     = 3306
     dbname   = var.db_name
   })

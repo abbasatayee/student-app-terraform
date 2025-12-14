@@ -4,7 +4,7 @@
 # IAM Role for EC2 instances
 # Allows EC2 instances to access AWS services like Secrets Manager and SSM
 resource "aws_iam_role" "ec2_role" {
-  name = "${local.name_prefix}-ec2-role"
+  name = "${var.name_prefix}-ec2-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,9 +17,12 @@ resource "aws_iam_role" "ec2_role" {
     }]
   })
 
-  tags = {
-    Name = "${local.name_prefix}-ec2-role"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-ec2-role"
+    },
+    var.common_tags
+  )
 }
 
 # Attach AWS Systems Manager Core policy
@@ -39,10 +42,13 @@ resource "aws_iam_role_policy_attachment" "ec2_secrets_rw" {
 # IAM Instance Profile
 # Attaches the IAM role to EC2 instances
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${local.name_prefix}-ec2-profile"
+  name = "${var.name_prefix}-ec2-profile"
   role = aws_iam_role.ec2_role.name
 
-  tags = {
-    Name = "${local.name_prefix}-ec2-profile"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-ec2-profile"
+    },
+    var.common_tags
+  )
 }

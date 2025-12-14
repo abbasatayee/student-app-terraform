@@ -12,9 +12,12 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
-    Name = "${local.name_prefix}-vpc"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-vpc"
+    },
+    var.common_tags
+  )
 }
 
 # Public Subnets
@@ -27,10 +30,13 @@ resource "aws_subnet" "public" {
   availability_zone       = element(data.aws_availability_zones.available.names, index(var.public_subnets, each.value))
   map_public_ip_on_launch = true
 
-  tags = {
-    Name = "${local.name_prefix}-public-subnet-${index(var.public_subnets, each.value) + 1}"
-    Type = "Public"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-public-subnet-${index(var.public_subnets, each.value) + 1}"
+      Type = "Public"
+    },
+    var.common_tags
+  )
 }
 
 # Private Subnets
@@ -42,10 +48,13 @@ resource "aws_subnet" "private" {
   cidr_block        = each.value
   availability_zone = element(data.aws_availability_zones.available.names, index(var.private_subnets, each.value))
 
-  tags = {
-    Name = "${local.name_prefix}-private-subnet-${index(var.private_subnets, each.value) + 1}"
-    Type = "Private"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-private-subnet-${index(var.private_subnets, each.value) + 1}"
+      Type = "Private"
+    },
+    var.common_tags
+  )
 }
 
 # Internet Gateway
@@ -53,9 +62,12 @@ resource "aws_subnet" "private" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
-    Name = "${local.name_prefix}-igw"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-igw"
+    },
+    var.common_tags
+  )
 }
 
 # Public Route Table
@@ -68,10 +80,13 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.gw.id
   }
 
-  tags = {
-    Name = "${local.name_prefix}-public-rt"
-    Type = "Public"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-public-rt"
+      Type = "Public"
+    },
+    var.common_tags
+  )
 }
 
 # Route Table Association for Public Subnets

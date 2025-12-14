@@ -13,9 +13,12 @@ resource "aws_key_pair" "webapp_key" {
   key_name   = var.key_name
   public_key = tls_private_key.webapp_key.public_key_openssh
 
-  tags = {
-    Name = "${local.name_prefix}-keypair"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-keypair"
+    },
+    var.common_tags
+  )
 }
 
 # Save private key to local file

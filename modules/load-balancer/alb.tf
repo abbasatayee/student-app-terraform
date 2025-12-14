@@ -4,10 +4,10 @@
 # Target Group
 # Defines which EC2 instances the load balancer will route traffic to
 resource "aws_lb_target_group" "web_tg" {
-  name        = "${local.name_prefix}-web-tg"
+  name        = "${var.name_prefix}-web-tg"
   port        = 80
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
   target_type = "instance"
 
   # Health check configuration
@@ -26,19 +26,22 @@ resource "aws_lb_target_group" "web_tg" {
   # Connection draining - wait for in-flight requests to complete before deregistering unhealthy instances
   deregistration_delay = 30
 
-  tags = {
-    Name = "${local.name_prefix}-web-tg"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-web-tg"
+    },
+    var.common_tags
+  )
 }
 
 # Application Load Balancer
 # Distributes incoming HTTP/HTTPS traffic across multiple EC2 instances
 resource "aws_lb" "web_alb" {
-  name               = "${local.name_prefix}-alb"
+  name               = "${var.name_prefix}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = [for s in aws_subnet.public : s.id]
+  security_groups    = [var.lb_security_group_id]
+  subnets            = var.public_subnet_ids
 
   # Enable deletion protection in production
   enable_deletion_protection = false
@@ -47,9 +50,12 @@ resource "aws_lb" "web_alb" {
   enable_http2                     = true
   enable_cross_zone_load_balancing = true
 
-  tags = {
-    Name = "${local.name_prefix}-alb"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-alb"
+    },
+    var.common_tags
+  )
 }
 
 # HTTP Listener

@@ -513,6 +513,7 @@ terraform/
 │   ├── variables.tf           # Input variables
 │   ├── outputs.tf             # Output values
 │   └── versions.tf            # Terraform and provider versions
+├── main.tf                     # Root configuration entry point
 ├── .gitignore                  # Git ignore rules
 └── README.md                   # This file
 ```

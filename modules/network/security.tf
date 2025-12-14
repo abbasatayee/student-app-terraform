@@ -4,7 +4,7 @@
 # Security Group for Web Servers (EC2 instances)
 # Allows HTTP traffic from the Load Balancer only
 resource "aws_security_group" "web_sg" {
-  name        = "${local.name_prefix}-web-sg"
+  name        = "${var.name_prefix}-web-sg"
   description = "Security group for web servers - allows HTTP from Load Balancer"
   vpc_id      = aws_vpc.main.id
 
@@ -26,15 +26,18 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "${local.name_prefix}-web-sg"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-web-sg"
+    },
+    var.common_tags
+  )
 }
 
 # Security Group for Database (RDS)
 # Only allows MySQL access from web servers
 resource "aws_security_group" "db_sg" {
-  name        = "${local.name_prefix}-db-sg"
+  name        = "${var.name_prefix}-db-sg"
   description = "Security group for RDS MySQL - allows access from web servers only"
   vpc_id      = aws_vpc.main.id
 
@@ -56,15 +59,18 @@ resource "aws_security_group" "db_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "${local.name_prefix}-db-sg"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-db-sg"
+    },
+    var.common_tags
+  )
 }
 
 # Security Group for Load Balancer
 # Allows HTTP and HTTPS traffic from the internet
 resource "aws_security_group" "lb_sg" {
-  name        = "${local.name_prefix}-lb-sg"
+  name        = "${var.name_prefix}-lb-sg"
   description = "Security group for Application Load Balancer - allows HTTP/HTTPS from internet"
   vpc_id      = aws_vpc.main.id
 
@@ -95,7 +101,10 @@ resource "aws_security_group" "lb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "${local.name_prefix}-lb-sg"
-  }
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-lb-sg"
+    },
+    var.common_tags
+  )
 }

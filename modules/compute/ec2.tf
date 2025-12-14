@@ -26,13 +26,13 @@ resource "aws_instance" "web" {
   key_name      = aws_key_pair.webapp_key.key_name
 
   # Deploy in first public subnet for initial setup
-  subnet_id                   = aws_subnet.public[var.public_subnets[0]].id
+  subnet_id                   = values(var.public_subnets)[0].id
   associate_public_ip_address = true
 
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  vpc_security_group_ids = [var.web_security_group_id]
 
   # IAM instance profile for accessing AWS services
-  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
+  iam_instance_profile = var.iam_instance_profile_name
 
   # User data script to bootstrap the instance
   # This script installs dependencies, sets up the database, and configures the application
@@ -44,7 +44,7 @@ resource "aws_instance" "web" {
     apt install -y nodejs unzip wget npm mysql-client
     
     # Database connection variables
-    DB_HOST="${aws_db_instance.mysql.address}"
+    DB_HOST="${var.rds_endpoint}"
     DB_USER="${var.db_username}"
     DB_PASS="${var.db_password}"
     DB_NAME="${var.db_name}"
@@ -98,10 +98,10 @@ resource "aws_instance" "web" {
     chmod +x /etc/rc.local
   EOF
 
-  tags = {
-    Name = "${local.name_prefix}-bootstrap-instance"
-  }
-
-  # Ensure RDS is available before creating this instance
-  depends_on = [aws_db_instance.mysql]
+  tags = merge(
+    {
+      Name = "${var.name_prefix}-bootstrap-instance"
+    },
+    var.common_tags
+  )
 }
