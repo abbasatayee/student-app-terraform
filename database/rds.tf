@@ -23,11 +23,11 @@ resource "aws_db_instance" "mysql" {
   instance_class = var.rds_instance_class
 
   # Database configuration
-  allocated_storage     = var.rds_allocated_storage
-  db_name               = var.db_name
-  username              = var.db_username
-  password              = var.db_password
-  parameter_group_name  = "default.mysql8.0"
+  allocated_storage    = var.rds_allocated_storage
+  db_name              = var.db_name
+  username             = var.db_username
+  password             = var.db_password
+  parameter_group_name = "default.mysql8.0"
 
   # Network configuration
   db_subnet_group_name   = aws_db_subnet_group.main.name
@@ -39,8 +39,8 @@ resource "aws_db_instance" "mysql" {
 
   # Backup and maintenance
   backup_retention_period = 7
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "mon:04:00-mon:05:00"
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "mon:04:00-mon:05:00"
 
   # Deletion protection (set to false for easier cleanup, enable in production)
   deletion_protection = false

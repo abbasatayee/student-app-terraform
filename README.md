@@ -408,7 +408,9 @@ terraform output rds_endpoint
 
 ## 🏛️ Infrastructure Components
 
-### VPC (`vpc.tf`)
+### Network (`network/`)
+
+**VPC (`network/vpc.tf`)**:
 
 - **VPC**: Main VPC with DNS support enabled
 - **Public Subnets**: Two subnets across different AZs for Load Balancer
@@ -416,76 +418,106 @@ terraform output rds_endpoint
 - **Internet Gateway**: Enables internet access for public subnets
 - **Route Tables**: Routes traffic for public subnets
 
-### Application Load Balancer (`alb.tf`)
+**Security Groups (`network/security.tf`)**:
 
-- **ALB**: Application Load Balancer in public subnets
-- **Target Group**: Routes traffic to EC2 instances on port 80
-- **HTTP Listener**: Listens on port 80 and forwards to target group
-- **Health Checks**: Monitors instance health via HTTP requests
+- **Load Balancer SG**: Allows HTTP/HTTPS from internet
+- **Web Server SG**: Allows HTTP from Load Balancer only
+- **Database SG**: Allows MySQL from web servers only
 
-### Auto Scaling Group (`asg.tf`)
+### Compute (`compute/`)
+
+**EC2 (`compute/ec2.tf`)**:
+
+- **Bootstrap Instance**: Initial EC2 instance for application setup
+- **User Data**: Automated installation and configuration script
+- **AMI Creation**: Creates custom AMI for Auto Scaling Group
+
+**Auto Scaling Group (`compute/asg.tf`)**:
 
 - **Launch Template**: Defines EC2 instance configuration
 - **Auto Scaling Group**: Maintains desired number of instances
 - **Scaling Policy**: CPU-based auto scaling (target: 80% CPU)
 - **AMI**: Custom AMI created from bootstrap instance
 
-### EC2 (`ec2.tf`)
+**Key Pair (`compute/keypair.tf`)**:
 
-- **Bootstrap Instance**: Initial EC2 instance for application setup
-- **User Data**: Automated installation and configuration script
-- **AMI Creation**: Creates custom AMI for Auto Scaling Group
+- **Key Generation**: Automatically generates SSH key pair
+- **AWS Key Pair**: Creates AWS key pair resource
+- **Local File**: Saves private key locally (with secure permissions)
 
-### RDS (`rds.tf`)
+### Database (`database/`)
+
+**RDS (`database/rds.tf`)**:
 
 - **MySQL 8.0**: Multi-AZ RDS MySQL database
 - **Subnet Group**: Deployed in private subnets
 - **Backups**: Automated daily backups (7-day retention)
 - **Encryption**: Storage encryption enabled
 
-### Security Groups (`security.tf`)
+### Load Balancer (`load-balancer/`)
 
-- **Load Balancer SG**: Allows HTTP/HTTPS from internet
-- **Web Server SG**: Allows HTTP from Load Balancer only
-- **Database SG**: Allows MySQL from web servers only
+**Application Load Balancer (`load-balancer/alb.tf`)**:
 
-### IAM (`role.tf`)
+- **ALB**: Application Load Balancer in public subnets
+- **Target Group**: Routes traffic to EC2 instances on port 80
+- **HTTP Listener**: Listens on port 80 and forwards to target group
+- **Health Checks**: Monitors instance health via HTTP requests
+
+### IAM (`iam/`)
+
+**IAM Roles (`iam/role.tf`)**:
 
 - **EC2 Role**: IAM role for EC2 instances
 - **SSM Access**: Systems Manager for secure access
 - **Secrets Manager**: Read database credentials
 
-### Secrets Manager (`secrets.tf`)
+### Secrets (`secrets/`)
+
+**Secrets Manager (`secrets/secrets.tf`)**:
 
 - **Database Secret**: Stores RDS credentials securely
 - **Secret Version**: Contains username, password, host, and database name
 
-### Key Pair (`keypair.tf`)
+### Shared Configuration (`shared/`)
 
-- **Key Generation**: Automatically generates SSH key pair
-- **AWS Key Pair**: Creates AWS key pair resource
-- **Local File**: Saves private key locally (with secure permissions)
+**Shared Files (`shared/`)**:
+
+- **`locals.tf`**: Common values and tags used across all resources
+- **`variables.tf`**: Input variables for the entire infrastructure
+- **`outputs.tf`**: Output values for important resource information
+- **`versions.tf`**: Terraform and provider version constraints
 
 ## 📁 File Structure
 
+The project is organized into logical folders for better maintainability:
+
 ```
 terraform/
-├── alb.tf              # Application Load Balancer configuration
-├── asg.tf              # Auto Scaling Group and Launch Template
-├── ec2.tf              # EC2 bootstrap instance
-├── keypair.tf          # SSH key pair generation
-├── locals.tf           # Common values and tags
-├── outputs.tf          # Output values
-├── rds.tf              # RDS MySQL database
-├── role.tf             # IAM roles and policies
-├── secrets.tf          # AWS Secrets Manager
-├── security.tf         # Security groups
-├── variables.tf        # Input variables
-├── versions.tf         # Terraform and provider versions
-├── vpc.tf              # VPC and networking
-├── .gitignore          # Git ignore rules
-└── README.md           # This file
+├── network/                    # Networking resources
+│   ├── vpc.tf                 # VPC, subnets, Internet Gateway, Route Tables
+│   └── security.tf            # Security Groups
+├── compute/                    # Compute resources
+│   ├── ec2.tf                 # EC2 bootstrap instance
+│   ├── asg.tf                 # Auto Scaling Group and Launch Template
+│   └── keypair.tf             # SSH key pair generation
+├── database/                   # Database resources
+│   └── rds.tf                 # RDS MySQL database
+├── load-balancer/              # Load balancing resources
+│   └── alb.tf                 # Application Load Balancer configuration
+├── iam/                        # Identity and Access Management
+│   └── role.tf                # IAM roles and policies
+├── secrets/                    # Secrets management
+│   └── secrets.tf             # AWS Secrets Manager
+├── shared/                     # Shared configuration files
+│   ├── locals.tf              # Common values and tags
+│   ├── variables.tf           # Input variables
+│   ├── outputs.tf             # Output values
+│   └── versions.tf            # Terraform and provider versions
+├── .gitignore                  # Git ignore rules
+└── README.md                   # This file
 ```
+
+**Note**: Terraform automatically reads all `.tf` files recursively from subdirectories, so this organization works seamlessly without any additional configuration.
 
 ## 🧹 Cleanup
 

@@ -44,7 +44,7 @@ resource "aws_lb" "web_alb" {
   enable_deletion_protection = false
 
   # Enable access logs for monitoring (optional)
-  enable_http2    = true
+  enable_http2                     = true
   enable_cross_zone_load_balancing = true
 
   tags = {
