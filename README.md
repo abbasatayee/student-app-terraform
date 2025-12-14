@@ -33,6 +33,13 @@ This project creates a secure, production-ready AWS infrastructure with:
 ┌─────────────────────────────────────────────────────────┐
 │                      VPC (10.0.0.0/16)                  │
 │                                                          │
+                                │
+│  ┌──────────────────┐      ┌──────────────────┐        │
+│  │ Private Subnet 1 │      │ Private Subnet 2 │        │
+│  │ (10.0.101.0/24)  │      │ (10.0.102.0/24)  │        │
+│  │                  │      │                  │        │
+│  │  [RDS MySQL]     │      │  [RDS Standby]   │        │
+│  └──────────────────┘      └──────────────────┘
 │  ┌──────────────────┐      ┌──────────────────┐        │
 │  │  Public Subnet 1 │      │  Public Subnet 2 │        │
 │  │   (10.0.1.0/24)  │      │   (10.0.2.0/24)  │        │
@@ -43,54 +50,110 @@ This project creates a secure, production-ready AWS infrastructure with:
 │           └──────────┬──────────────┘                   │
 │                      │                                  │
 │              [Internet Gateway]                         │
-│                      │                                  │
-│  ┌──────────────────┐      ┌──────────────────┐        │
-│  │ Private Subnet 1 │      │ Private Subnet 2 │        │
-│  │ (10.0.101.0/24)  │      │ (10.0.102.0/24)  │        │
-│  │                  │      │                  │        │
-│  │  [RDS MySQL]     │      │  [RDS Standby]   │        │
-│  └──────────────────┘      └──────────────────┘        │
+│                      │      │
 │                                                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## 📦 Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before you begin, ensure you have the following:
 
-1. **Terraform** (>= 1.5.0)
-   ```bash
-   terraform version
-   ```
+### 1. AWS User Setup (Required First Step)
 
-2. **AWS CLI** configured with appropriate credentials
-   ```bash
-   aws configure
-   ```
+**You must manually create an AWS IAM user with the necessary permissions before using this Terraform project.**
 
-3. **AWS Account** with appropriate permissions to create:
-   - VPCs and networking components
-   - RDS instances
-   - Security groups
-   - Subnets and route tables
+#### Steps to Create AWS User:
 
-4. **AWS Credentials** configured via one of:
-   - AWS CLI (`aws configure`)
-   - Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-   - IAM role (if running on EC2)
+1. **Log in to AWS Console** and navigate to **IAM (Identity and Access Management)**
+
+2. **Create a new IAM User:**
+
+   - Go to **Users** → **Create user**
+   - Enter a username (e.g., `terraform-user`)
+   - Select **Provide user access to the AWS Management Console** (optional) or **Access key - Programmatic access** (required for Terraform)
+   - Click **Next**
+
+3. **Attach Permissions:**
+
+   - Select **Attach policies directly**
+   - Attach the following policies:
+     - **AmazonEC2FullAccess** - Provides full access to EC2 services
+     - **AdministratorAccess** - Provides full access to AWS services and resources
+   - Click **Next** → **Create user**
+
+4. **Save Access Credentials:**
+   - **Important**: Download or copy the **Access Key ID** and **Secret Access Key**
+   - These credentials will be used to configure AWS CLI and Terraform
+   - ⚠️ **Store these securely** - you won't be able to view the secret key again
+
+#### Alternative: Custom Policy (More Secure)
+
+For better security, you can create a custom policy with only the required permissions:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["ec2:*", "rds:*", "vpc:*", "iam:PassRole"],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+### 2. Terraform (>= 1.5.0)
+
+```bash
+terraform version
+```
+
+### 3. AWS CLI Configuration
+
+Configure AWS CLI with the credentials from the user you created:
+
+```bash
+aws configure
+```
+
+When prompted, enter:
+
+- **AWS Access Key ID**: Your access key from step 1
+- **AWS Secret Access Key**: Your secret key from step 1
+- **Default region**: e.g., `us-east-1`
+- **Default output format**: `json`
+
+### 4. AWS Credentials Verification
+
+Verify your credentials are working:
+
+```bash
+aws sts get-caller-identity
+```
+
+This should return your user ARN and account information.
+
+### 5. Required AWS Permissions
+
+The IAM user must have permissions to create:
+
+- VPCs and networking components
+- RDS instances
+- Security groups
+- Subnets and route tables
+- EC2 instances (if you plan to add them later)
 
 ## 🚀 Installation
 
-1. **Clone or navigate to the project directory:**
-   ```bash
-   cd terraform
-   ```
+1. **Initialize Terraform:**
 
-2. **Initialize Terraform:**
-   ```bash
-   terraform init
-   ```
-   This will download the required AWS provider plugins.
+```bash
+terraform init
+```
+
+This will download the required AWS provider plugins.
 
 ## ⚙️ Configuration
 
@@ -154,6 +217,7 @@ terraform plan
 ```
 
 This will show you:
+
 - Resources that will be created
 - Resources that will be modified
 - Resources that will be destroyed
@@ -190,6 +254,7 @@ aws rds describe-db-instances --db-instance-identifier student-database
 The RDS MySQL database is deployed in private subnets and is not publicly accessible. To connect:
 
 1. **From an EC2 instance in the public subnet:**
+
    ```bash
    mysql -h student-database.xxxxx.us-east-1.rds.amazonaws.com \
          -u nodeapp \
@@ -205,17 +270,17 @@ The RDS MySQL database is deployed in private subnets and is not publicly access
 
 ## 📝 Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `aws_region` | AWS region to deploy resources | `us-east-1` | No |
-| `vpc_cidr` | CIDR block for the VPC | `10.0.0.0/16` | No |
-| `public_subnets` | List of CIDR blocks for public subnets | `["10.0.1.0/24", "10.0.2.0/24"]` | No |
-| `private_subnets` | List of CIDR blocks for private subnets | `["10.0.101.0/24", "10.0.102.0/24"]` | No |
-| `db_name` | Name of the MySQL database | `STUDENTS` | No |
-| `db_username` | Master username for RDS | `nodeapp` | No |
-| `db_password` | Master password for RDS | `student12` | No |
-| `instance_type` | EC2 instance type | `t3.micro` | No |
-| `key_name` | EC2 Key Pair name | `webapp-key` | No |
+| Variable          | Description                             | Default                              | Required |
+| ----------------- | --------------------------------------- | ------------------------------------ | -------- |
+| `aws_region`      | AWS region to deploy resources          | `us-east-1`                          | No       |
+| `vpc_cidr`        | CIDR block for the VPC                  | `10.0.0.0/16`                        | No       |
+| `public_subnets`  | List of CIDR blocks for public subnets  | `["10.0.1.0/24", "10.0.2.0/24"]`     | No       |
+| `private_subnets` | List of CIDR blocks for private subnets | `["10.0.101.0/24", "10.0.102.0/24"]` | No       |
+| `db_name`         | Name of the MySQL database              | `STUDENTS`                           | No       |
+| `db_username`     | Master username for RDS                 | `nodeapp`                            | No       |
+| `db_password`     | Master password for RDS                 | `student12`                          | No       |
+| `instance_type`   | EC2 instance type                       | `t3.micro`                           | No       |
+| `key_name`        | EC2 Key Pair name                       | `webapp-key`                         | No       |
 
 ## 🏛️ Infrastructure Components
 
@@ -250,6 +315,7 @@ terraform destroy
 Terraform will show you what will be destroyed and ask for confirmation. Type `yes` to proceed.
 
 **Warning**: This will permanently delete:
+
 - The RDS database and all data
 - All networking components
 - Security groups
@@ -265,6 +331,7 @@ If you see errors about undeclared resources, ensure all `.tf` files are in the 
 ### Error: "InvalidParameterValue: The parameter identifier is already in use"
 
 The RDS identifier `student-database` already exists. Either:
+
 - Change the identifier in `rds.tf`
 - Delete the existing RDS instance
 - Use a different AWS region
@@ -272,6 +339,7 @@ The RDS identifier `student-database` already exists. Either:
 ### Error: "InvalidKeyPair.NotFound"
 
 The EC2 key pair specified in `key_name` doesn't exist in your AWS account. Either:
+
 - Create the key pair in AWS Console
 - Update `key_name` variable to match an existing key pair
 
@@ -304,4 +372,3 @@ Feel free to submit issues or pull requests for improvements.
 ---
 
 **Note**: Remember to change default passwords and review security settings before deploying to production!
-
