@@ -26,6 +26,31 @@ resource "aws_instance" "web" {
     #!/bin/bash -xe
     apt update -y
     apt install nodejs unzip wget npm mysql-client -y
+    
+    # Wait for RDS to be available and create table
+    DB_HOST="${aws_db_instance.mysql.address}"
+    DB_USER="${var.db_username}"
+    DB_PASS="${var.db_password}"
+    DB_NAME="${var.db_name}"
+    
+    echo "Waiting for RDS to be available..."
+    until mysql -h $${DB_HOST} -u $${DB_USER} -p$${DB_PASS} -e "SELECT 1" &> /dev/null; do
+      echo "RDS not ready yet, waiting 30 seconds..."
+      sleep 30
+    done
+    
+    echo "RDS is available, checking if table exists..."
+    TABLE_EXISTS=$(mysql -h $${DB_HOST} -u $${DB_USER} -p$${DB_PASS} $${DB_NAME} -sN -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$${DB_NAME}' AND table_name='students';")
+    
+    if [ "$${TABLE_EXISTS}" -eq "0" ]; then
+      echo "Table does not exist, creating students table..."
+      mysql -h $${DB_HOST} -u $${DB_USER} -p$${DB_PASS} $${DB_NAME} -e "CREATE TABLE students(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(255) NOT NULL, address VARCHAR(255) NOT NULL, city VARCHAR(255) NOT NULL, state VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, phone VARCHAR(100) NOT NULL, PRIMARY KEY (id));"
+      echo "Table created successfully!"
+    else
+      echo "Table 'students' already exists, skipping creation."
+    fi
+    
+    # Download and setup application
     wget https://public-bucketabbas.s3.us-east-1.amazonaws.com/code.zip -P /home/ubuntu
     cd /home/ubuntu
     unzip code.zip -x "resources/codebase_partner/node_modules/*"
