@@ -2,23 +2,6 @@
 
 A production-ready, scalable AWS infrastructure for a student records web application built with Terraform. This project provisions a complete infrastructure including VPC, Application Load Balancer, Auto Scaling Group, RDS MySQL database, and all necessary networking and security components.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Variables](#variables)
-- [Outputs](#outputs)
-- [Infrastructure Components](#infrastructure-components)
-- [File Structure](#file-structure)
-- [Cleanup](#cleanup)
-- [Troubleshooting](#troubleshooting)
-- [Best Practices](#best-practices)
-
 ## 🎯 Overview
 
 This Terraform project creates a complete, production-ready AWS infrastructure with:
@@ -355,120 +338,6 @@ terraform output alb_dns_name
 terraform output rds_endpoint
 ```
 
-## 🏛️ Infrastructure Components
-
-### Network (`network/`)
-
-**VPC (`network/vpc.tf`)**:
-
-- **VPC**: Main VPC with DNS support enabled
-- **Public Subnets**: Two subnets across different AZs for Load Balancer
-- **Private Subnets**: Two subnets across different AZs for EC2 and RDS
-- **Internet Gateway**: Enables internet access for public subnets
-- **Route Tables**: Routes traffic for public subnets
-
-**Security Groups (`network/security.tf`)**:
-
-- **Load Balancer SG**: Allows HTTP/HTTPS from internet
-- **Web Server SG**: Allows HTTP from Load Balancer only
-- **Database SG**: Allows MySQL from web servers only
-
-### Compute (`compute/`)
-
-**EC2 (`compute/ec2.tf`)**:
-
-- **Bootstrap Instance**: Initial EC2 instance for application setup
-- **User Data**: Automated installation and configuration script
-- **AMI Creation**: Creates custom AMI for Auto Scaling Group
-
-**Auto Scaling Group (`compute/asg.tf`)**:
-
-- **Launch Template**: Defines EC2 instance configuration
-- **Auto Scaling Group**: Maintains desired number of instances
-- **Scaling Policy**: CPU-based auto scaling (target: 80% CPU)
-- **AMI**: Custom AMI created from bootstrap instance
-
-**Key Pair (`compute/keypair.tf`)**:
-
-- **Key Generation**: Automatically generates SSH key pair
-- **AWS Key Pair**: Creates AWS key pair resource
-- **Local File**: Saves private key locally (with secure permissions)
-
-### Database (`database/`)
-
-**RDS (`database/rds.tf`)**:
-
-- **MySQL 8.0**: Multi-AZ RDS MySQL database
-- **Subnet Group**: Deployed in private subnets
-- **Backups**: Automated daily backups (7-day retention)
-- **Encryption**: Storage encryption enabled
-
-### Load Balancer (`load-balancer/`)
-
-**Application Load Balancer (`load-balancer/alb.tf`)**:
-
-- **ALB**: Application Load Balancer in public subnets
-- **Target Group**: Routes traffic to EC2 instances on port 80
-- **HTTP Listener**: Listens on port 80 and forwards to target group
-- **Health Checks**: Monitors instance health via HTTP requests
-
-### IAM (`iam/`)
-
-**IAM Roles (`iam/role.tf`)**:
-
-- **EC2 Role**: IAM role for EC2 instances
-- **SSM Access**: Systems Manager for secure access
-- **Secrets Manager**: Read database credentials
-
-### Secrets (`secrets/`)
-
-**Secrets Manager (`secrets/secrets.tf`)**:
-
-- **Database Secret**: Stores RDS credentials securely
-- **Secret Version**: Contains username, password, host, and database name
-
-### Shared Configuration (`shared/`)
-
-**Shared Files (`shared/`)**:
-
-- **`locals.tf`**: Common values and tags used across all resources
-- **`variables.tf`**: Input variables for the entire infrastructure
-- **`outputs.tf`**: Output values for important resource information
-- **`versions.tf`**: Terraform and provider version constraints
-
-## 📁 File Structure
-
-The project is organized into logical folders for better maintainability:
-
-```
-terraform/
-├── network/                    # Networking resources
-│   ├── vpc.tf                 # VPC, subnets, Internet Gateway, Route Tables
-│   └── security.tf            # Security Groups
-├── compute/                    # Compute resources
-│   ├── ec2.tf                 # EC2 bootstrap instance
-│   ├── asg.tf                 # Auto Scaling Group and Launch Template
-│   └── keypair.tf             # SSH key pair generation
-├── database/                   # Database resources
-│   └── rds.tf                 # RDS MySQL database
-├── load-balancer/              # Load balancing resources
-│   └── alb.tf                 # Application Load Balancer configuration
-├── iam/                        # Identity and Access Management
-│   └── role.tf                # IAM roles and policies
-├── secrets/                    # Secrets management
-│   └── secrets.tf             # AWS Secrets Manager
-├── shared/                     # Shared configuration files
-│   ├── locals.tf              # Common values and tags
-│   ├── variables.tf           # Input variables
-│   ├── outputs.tf             # Output values
-│   └── versions.tf            # Terraform and provider versions
-├── main.tf                     # Root configuration entry point
-├── .gitignore                  # Git ignore rules
-└── README.md                   # This file
-```
-
-**Note**: Terraform automatically reads all `.tf` files recursively from subdirectories, so this organization works seamlessly without any additional configuration.
-
 ## 🧹 Cleanup
 
 To destroy all resources and avoid ongoing charges:
@@ -579,15 +448,6 @@ terraform init
 - Consider snapshot strategy for AMIs
 - Document recovery procedures
 - Test backup restoration regularly
-
-## 📚 Additional Resources
-
-- [Terraform AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS VPC Documentation](https://docs.aws.amazon.com/vpc/)
-- [AWS RDS Documentation](https://docs.aws.amazon.com/rds/)
-- [AWS Application Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/)
-- [AWS Auto Scaling](https://docs.aws.amazon.com/autoscaling/)
-- [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/)
 
 ## 📄 License
 
