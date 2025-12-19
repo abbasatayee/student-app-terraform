@@ -15,12 +15,11 @@ module "network" {
 
 # IAM Module
 # Creates IAM roles and instance profiles for EC2 instances
-module "iam" {
-  source = "./modules/iam"
-
-  name_prefix = local.name_prefix
-  common_tags = local.common_tags
-}
+# module "iam" {
+#   source = "./modules/iam"
+#   name_prefix = local.name_prefix
+#   common_tags = local.common_tags
+# }
 
 # Database Module
 # Creates RDS MySQL database instance
@@ -62,7 +61,7 @@ module "compute" {
   public_subnets             = module.network.public_subnets
   private_subnet_ids         = module.network.private_subnet_ids
   web_security_group_id      = module.network.web_sg_id
-  iam_instance_profile_name  = module.iam.ec2_instance_profile_name
+  iam_instance_profile_name  = var.iam_instance_profile_name
   asg_min_size               = var.asg_min_size
   asg_max_size               = var.asg_max_size
   asg_desired_capacity       = var.asg_desired_capacity

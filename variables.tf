@@ -19,6 +19,12 @@ variable "public_subnets" {
   default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
+variable "iam_instance_profile_name" {
+  description = "Name of the IAM instance"
+  type        = string
+  default     = "LabInstanceProfile"
+}
+
 variable "private_subnets" {
   description = "List of CIDR blocks for private subnets (should be in different AZs)"
   type        = list(string)
