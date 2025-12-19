@@ -15,11 +15,11 @@ module "network" {
 
 # IAM Module
 # Creates IAM roles and instance profiles for EC2 instances
-# module "iam" {
-#   source = "./modules/iam"
-#   name_prefix = local.name_prefix
-#   common_tags = local.common_tags
-# }
+module "iam" {
+  source      = "./modules/iam"
+  name_prefix = local.name_prefix
+  common_tags = local.common_tags
+}
 
 # Database Module
 # Creates RDS MySQL database instance
@@ -96,14 +96,31 @@ module "secrets" {
 }
 
 
+# SSM Endpoints Module
+#
+# This module provisions AWS Systems Manager (SSM) VPC endpoints within the specified VPC.
+# The SSM endpoints enable EC2 instances located in private subnets to communicate with
+# SSM services without requiring direct Internet access or a NAT gateway. This greatly
+# enhances security posture by allowing management and automation via SSM in air-gapped environments.
+#
+# All required configuration is passed from the root module:
+#   - name_prefix: A common prefix for resource names for easier identification.
+#   - vpc_id: The ID of the VPC where endpoints will be created.
+#   - ssm_security_group_id: The security group to attach to endpoint network interfaces.
+#   - common_tags: Tags to apply to the resources for identification and cost allocation.
+#   - aws_region: The AWS region for the resources.
+#   - private_subnet_ids: The list of private subnet IDs for endpoint placement.
+#
+# This module is critical for enabling SSM (Session Manager, Run Command, etc.) access in private network environments.
 module "ssm" {
   source = "./modules/ssm-endpoints"
 
-  name_prefix          = local.name_prefix
-  vpc_id               = module.network.vpc_id
-  ssm_security_group_id      = module.network.ssm_vpc_endpoint_sg_id
-  common_tags  = local.common_tags
-  aws_region = var.aws_region
-  private_subnet_ids = module.network.private_subnet_ids
+  name_prefix           = local.name_prefix
+  vpc_id                = module.network.vpc_id
+  ssm_security_group_id = module.network.ssm_vpc_endpoint_sg_id
+  common_tags           = local.common_tags
+  aws_region            = var.aws_region
+  private_subnet_ids    = module.network.private_subnet_ids
 
+  depends_on = [module.network]
 }
