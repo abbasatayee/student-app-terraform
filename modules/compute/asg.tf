@@ -1,45 +1,60 @@
 # asg.tf
 # Auto Scaling Group, Launch Template, and Scaling Policies
 
-# AMI from Instance
-# Creates a custom AMI from the bootstrap EC2 instance
-# This AMI contains the configured application and is used by the Auto Scaling Group
-resource "aws_ami_from_instance" "web_ami" {
-  name               = "${var.name_prefix}-web-ami-${formatdate("YYYYMMDDhhmmss", timestamp())}"
-  source_instance_id = aws_instance.web.id
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
 
-  tags = merge(
-    {
-      Name = "${var.name_prefix}-web-ami"
-    },
-    var.common_tags
-  )
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
 
-  # Ensure the bootstrap instance is fully configured before creating AMI
-  depends_on = [aws_instance.web]
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
-# Launch Template
-# Defines the configuration for EC2 instances launched by the Auto Scaling Group
+
 resource "aws_launch_template" "web_lt" {
   name_prefix   = "${var.name_prefix}-lt-"
-  image_id      = aws_ami_from_instance.web_ami.id
+  image_id      = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name      = aws_key_pair.webapp_key.key_name
 
-  # IAM instance profile for accessing AWS services
   iam_instance_profile {
     name = var.iam_instance_profile_name
   }
 
-  # Network configuration
-  # Instances are launched in private subnets without public IPs
   network_interfaces {
     associate_public_ip_address = false
     security_groups             = [var.web_security_group_id]
   }
 
-  # Tag specifications for instances launched from this template
+  user_data = base64encode(<<EOF
+#!/bin/bash
+#!/bin/bash -xe
+apt update -y
+apt install nodejs unzip wget npm mysql-client -y
+
+#wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-200-ACCAP1-1-DEV/code.zip -P /home/ubuntu
+wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-200-ACCAP1-1-91571/1-lab-capstone-project-1/code.zip -P /home/ubuntu
+cd /home/ubuntu
+unzip code.zip -x "resources/codebase_partner/node_modules/*"
+cd resources/codebase_partner
+npm install aws aws-sdk
+
+export APP_PORT=80
+npm start &
+echo '#!/bin/bash -xe
+cd /home/ubuntu/resources/codebase_partner
+export APP_PORT=80
+npm start' > /etc/rc.local
+chmod +x /etc/rc.local
+EOF
+  )
+
   tag_specifications {
     resource_type = "instance"
     tags = merge(
@@ -49,10 +64,8 @@ resource "aws_launch_template" "web_lt" {
       var.common_tags
     )
   }
-
-  # Ensure AMI is created before launch template
-  depends_on = [aws_ami_from_instance.web_ami]
 }
+
 
 # Auto Scaling Group
 # Automatically maintains the desired number of EC2 instances

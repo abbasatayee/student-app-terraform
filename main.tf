@@ -94,3 +94,16 @@ module "secrets" {
 
   depends_on = [module.database]
 }
+
+
+module "ssm" {
+  source = "./modules/ssm-endpoints"
+
+  name_prefix          = local.name_prefix
+  vpc_id               = module.network.vpc_id
+  ssm_security_group_id      = module.network.ssm_vpc_endpoint_sg_id
+  common_tags  = local.common_tags
+  aws_region = var.aws_region
+  private_subnet_ids = module.network.private_subnet_ids
+
+}

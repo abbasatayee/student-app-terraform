@@ -61,17 +61,6 @@ output "rds_database_name" {
   value       = module.database.rds_database_name
 }
 
-# EC2 Information
-output "bootstrap_instance_id" {
-  description = "ID of the bootstrap EC2 instance"
-  value       = module.compute.bootstrap_instance_id
-}
-
-output "bootstrap_instance_public_ip" {
-  description = "Public IP address of the bootstrap EC2 instance"
-  value       = module.compute.bootstrap_instance_public_ip
-}
-
 # Auto Scaling Group Information
 output "asg_name" {
   description = "Name of the Auto Scaling Group"
@@ -89,11 +78,6 @@ output "launch_template_id" {
   value       = module.compute.launch_template_id
 }
 
-# AMI Information
-output "web_ami_id" {
-  description = "ID of the custom AMI created from bootstrap instance"
-  value       = module.compute.web_ami_id
-}
 
 # Secrets Manager Information
 output "db_secret_arn" {

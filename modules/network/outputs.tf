@@ -50,3 +50,8 @@ output "lb_sg_id" {
   description = "ID of the load balancer security group"
   value       = aws_security_group.lb_sg.id
 }
+
+output "ssm_vpc_endpoint_sg_id" {
+  value       = try(aws_security_group.ssm_vpc_endpoint_sg.id, null)
+  description = "SSM VPC endpoint security group ID"
+}

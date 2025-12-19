@@ -108,3 +108,32 @@ resource "aws_security_group" "lb_sg" {
     var.common_tags
   )
 }
+
+
+resource "aws_security_group" "ssm_vpc_endpoint_sg" {
+  name        = "ssm-vpc-endpoint-sg"
+  description = "Allow HTTPS from private EC2 instances to SSM VPC endpoints"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "HTTPS from VPC"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    {
+      Name = "ssm-vpc-endpoint-sg"
+    },
+    var.common_tags
+  )
+}
