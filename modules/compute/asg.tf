@@ -33,7 +33,6 @@ resource "aws_launch_template" "web_lt" {
   }
 
   user_data = base64encode(<<EOF
-#!/bin/bash
 #!/bin/bash -xe
 apt update -y
 apt install nodejs unzip wget npm mysql-client -y
@@ -54,6 +53,7 @@ npm start' > /etc/rc.local
 chmod +x /etc/rc.local
 EOF
   )
+  
 
   tag_specifications {
     resource_type = "instance"
