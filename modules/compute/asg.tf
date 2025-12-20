@@ -44,6 +44,16 @@ unzip code.zip -x "resources/codebase_partner/node_modules/*"
 cd resources/codebase_partner
 npm install aws aws-sdk
 
+mysql -h ${var.rds_endpoint} -u ${var.db_username} -p${var.db_password} -D ${var.db_name} -e "CREATE TABLE IF NOT EXISTS students(
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            address VARCHAR(255) NOT NULL,
+            city VARCHAR(255) NOT NULL,
+            state VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            phone VARCHAR(100) NOT NULL,
+            PRIMARY KEY ( id ));"
+
 export APP_PORT=80
 npm start &
 echo '#!/bin/bash -xe
@@ -53,7 +63,7 @@ npm start' > /etc/rc.local
 chmod +x /etc/rc.local
 EOF
   )
-  
+
 
   tag_specifications {
     resource_type = "instance"

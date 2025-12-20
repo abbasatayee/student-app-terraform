@@ -116,11 +116,11 @@ resource "aws_security_group" "ssm_vpc_endpoint_sg" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "HTTPS from VPC"
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"]
+    description = "HTTPS from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {

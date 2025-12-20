@@ -18,7 +18,7 @@ variable "key_name" {
 
 variable "public_subnets" {
   description = "Map of public subnets (for bootstrap instance)"
-  type        = map(object({
+  type = map(object({
     id = string
   }))
 }
@@ -71,17 +71,20 @@ variable "rds_endpoint" {
 variable "db_username" {
   description = "Database username"
   type        = string
+  default     = "nodeapp"
 }
 
 variable "db_password" {
   description = "Database password"
   type        = string
   sensitive   = true
+  default     = "student12"
 }
 
 variable "db_name" {
   description = "Database name"
   type        = string
+  default     = "STUDENTS"
 }
 
 variable "common_tags" {
