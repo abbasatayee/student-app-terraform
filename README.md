@@ -20,7 +20,7 @@ This Terraform project creates a complete, production-ready AWS infrastructure w
 
 <!-- include image instead -->
 
-![Architecture Diagram](docs/architecture.jpg)
+![Architecture Diagram](docs/architecture-2.jpg)
 
 ### Architecture Highlights
 
