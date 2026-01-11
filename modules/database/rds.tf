@@ -41,16 +41,16 @@ resource "aws_db_instance" "mysql" {
   multi_az = var.rds_multi_az
 
   # Backup and maintenance
-  backup_retention_period = 7
+  backup_retention_period = 0
   backup_window           = "03:00-04:00"
   maintenance_window      = "mon:04:00-mon:05:00"
 
   # Deletion protection (set to false for easier cleanup, enable in production)
-  deletion_protection = false
+  deletion_protection = true
   skip_final_snapshot = true
 
   # Storage encryption
-  storage_encrypted = true
+  storage_encrypted = false
 
   tags = merge(
     {
