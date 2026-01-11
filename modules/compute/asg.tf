@@ -32,6 +32,12 @@ resource "aws_launch_template" "web_lt" {
     security_groups             = [var.web_security_group_id]
   }
 
+  # Enable detailed CloudWatch monitoring (1-minute intervals)
+  # This enables CPU usage and other instance-level metrics
+  monitoring {
+    enabled = true
+  }
+
   user_data = base64encode(<<EOF
 #!/bin/bash -xe
 apt update -y
@@ -100,6 +106,19 @@ resource "aws_autoscaling_group" "web_asg" {
   # Uses ELB health checks (more reliable than EC2 health checks)
   health_check_type         = "ELB"
   health_check_grace_period = 120
+
+  # CloudWatch metrics configuration
+  enabled_metrics = [
+    "GroupMinSize",
+    "GroupMaxSize",
+    "GroupDesiredCapacity",
+    "GroupInServiceInstances",
+    "GroupTotalInstances",
+    "GroupPendingInstances",
+    "GroupStandbyInstances",
+    "GroupTerminatingInstances"
+  ]
+  metrics_granularity = "1Minute"
 
   # Wait for launch template to be ready
   depends_on = [aws_launch_template.web_lt]
