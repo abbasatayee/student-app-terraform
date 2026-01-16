@@ -66,7 +66,7 @@ variable "key_name" {
 variable "asg_min_size" {
   description = "Minimum number of instances in the Auto Scaling Group"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "asg_max_size" {
